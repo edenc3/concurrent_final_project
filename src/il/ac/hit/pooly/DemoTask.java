@@ -1,20 +1,21 @@
 package il.ac.hit.pooly;
 
-// CR: maybe this should be IRunnable
-public class DemoTask implements ITask{
-
-    // CR: remove name
-    public String name;
+// The DemoTask class represents a demo task that implements the ITask interface.
+public class DemoTask implements ITask {
+    private String priorityTask;
     private int priority;
 
-    DemoTask(String name, int priority) {
-        this.name = name;
+    // Constructs a DemoTask object with the specified priority.
+    //
+    // @param priority the priority of the task
+    public DemoTask(String priorityTask, int priority) {
+        this.priorityTask = priorityTask;
         setPriority(priority);
     }
 
     @Override
     public void perform() {
-        System.out.println("I'm a task");
+        System.out.println("I'm a task: " + priorityTask);
     }
 
     @Override
