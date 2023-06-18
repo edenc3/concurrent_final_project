@@ -5,7 +5,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 // The ThreadsPool class represents a thread pool that manages a PriorityBlockingQueue of tasks.
 public class ThreadsPool {
-    private PriorityBlockingQueue<ITask> priorityBlockingQueue;
+    private PriorityBlockingQueue<ITask> tasks;
 
     /*
      * Constructs a ThreadsPool object with the specified number of threads.
@@ -13,7 +13,7 @@ public class ThreadsPool {
      * @param numOfThreads the number of threads in the pool
      */
     public ThreadsPool(int numOfThreads) {
-        this.priorityBlockingQueue = new PriorityBlockingQueue<>(numOfThreads, Comparator.comparing(ITask::getPriority));
+        this.tasks = new PriorityBlockingQueue<>(numOfThreads, Comparator.comparing(ITask::getPriority));
 
         for (int i = 0; i < numOfThreads; i++) {
             new Thread(() -> {
@@ -21,7 +21,7 @@ public class ThreadsPool {
 
                 try {
                     while (true) {
-                        ITask t = priorityBlockingQueue.take();
+                        ITask t = tasks.take();
                         System.out.println("Polled by:" + Thread.currentThread().getName());
                         t.perform();
                     }
@@ -39,15 +39,6 @@ public class ThreadsPool {
      * @param task the task to submit
      */
     public void submit(ITask task) {
-        priorityBlockingQueue.add(task);
-    }
-
-    /*
-     * Returns the underlying PriorityBlockingQueue used by the thread pool.
-     *
-     * @return the PriorityBlockingQueue instance
-     */
-    public PriorityBlockingQueue<ITask> getPriorityBlockingQueue() {
-        return priorityBlockingQueue;
+        tasks.add(task);
     }
 }

@@ -1,129 +1,122 @@
 package tests;
 
-import org.junit.After;
-import org.junit.Before;
+import il.ac.hit.pooly.ThreadsPool;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import il.ac.hit.pooly.ITask;
-import il.ac.hit.pooly.ThreadsPool;
-import il.ac.hit.pooly.DemoTask;
+import static org.junit.Assert.*;
 
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Unit tests for the ThreadsPool class.
  */
 public class ThreadsPoolTest {
-    private ThreadsPool threadsPool;
-
-    /**
-     * Set up the ThreadsPool instance before each test.
-     */
-    @Before
-    public void setUp() {
-        threadsPool = new ThreadsPool(5);
-    }
-
-    /**
-     * Clean up the ThreadsPool instance after each test.
-     */
-    @After
-    public void tearDown() {
-        threadsPool = null;
-    }
-
-    /**
-     * Test for submitting a task to the thread pool.
-     * The task should be added to the pool successfully.
-     */
+    // Make sure that all tasks are executed exactly once
     @Test
-    public void submit_AddTaskToPool() {
-        // Create a new task
-        ITask task = new DemoTask("Priority Task", 1);
+    public void verifyAllTasksAreDoneOnce() throws InterruptedException {
+        class IntegerIncrementerTask implements ITask {
+            private AtomicInteger num;
 
-        // Submit the task to the ThreadsPool
-        threadsPool.submit(task);
+            public IntegerIncrementerTask(AtomicInteger num)
+            {
+                this.num = num;
+            }
 
-        // Get the underlying PriorityBlockingQueue from the ThreadsPool
-        PriorityBlockingQueue<ITask> priorityBlockingQueue = threadsPool.getPriorityBlockingQueue();
+            @Override
+            public void perform() {
+                num.incrementAndGet();
+            }
 
-        // Check if the task exists in the PriorityBlockingQueue
-        assertTrue("The task should be added to the pool", priorityBlockingQueue.contains(task));
+            @Override
+            public void setPriority(int level) {}
+
+            @Override
+            public int getPriority() {
+                return 0;
+            }
+        }
+
+        var task1 = new AtomicInteger(0);
+        var task2 = new AtomicInteger(0);
+        var task3 = new AtomicInteger(0);
+
+        var threadPool = new ThreadsPool(3);
+
+        threadPool.submit(new IntegerIncrementerTask(task1));
+        threadPool.submit(new IntegerIncrementerTask(task2));
+        threadPool.submit(new IntegerIncrementerTask(task3));
+
+        TimeUnit.SECONDS.sleep(3);
+
+        assertEquals(task1.get(), 1);
+        assertEquals(task2.get(), 1);
+        assertEquals(task3.get(), 1);
     }
 
-
-    /**
-     * Test for performing a task directly.
-     * The task's perform() method should execute without errors.
-     */
+    // Make sure that when the thread-pool is busy, new tasks are selected by their priority
     @Test
-    public void perform_PerformTask() {
-        // Create a sample task for testing
-        ITask task = new DemoTask("Perform Task", 2);
+    public void verifyTaskPriorityOrder() throws InterruptedException {
+        class SleepingTask implements ITask {
 
-        // Perform the task directly
-        task.perform();
+            @Override
+            public void perform() {
+                try {
+                    TimeUnit.SECONDS.sleep(3);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
-        // Add your assertions here to verify the behavior of the task's perform() method
-        // For example:
-        // - Check if the expected output is generated
+            @Override
+            public void setPriority(int level) {}
 
-        // Example assertion: Check if the task performs correctly
-        // You may need to redirect the output to verify it in the test
-        // For simplicity, let's assume the output is printed to the console,
-        // and we capture it for testing
-        // Here's a sample code snippet to redirect the output:
-        // ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        // System.setOut(new PrintStream(outContent));
-        // task.perform();
-        // String expectedOutput = "Expected output";
-        // assertEquals(expectedOutput, outContent.toString().trim());
+            @Override
+            public int getPriority() {
+                return 0;
+            }
+        }
 
-        // Make sure to reset the output redirection after the test
-        // System.setOut(System.out);
+        class AddPriorityToQueueTask implements ITask {
+            private int priority;
+            private BlockingQueue queue;
+
+            public AddPriorityToQueueTask(int priority, BlockingQueue queue) {
+                this.priority = priority;
+                this.queue = queue;
+            }
+
+            @Override
+            public void perform() {
+                queue.add(priority);
+            }
+
+            @Override
+            public void setPriority(int level) {
+                priority = level;
+            }
+
+            @Override
+            public int getPriority() {
+                return priority;
+            }
+        }
+
+        var threadPool = new ThreadsPool(1);
+
+        threadPool.submit(new SleepingTask());
+
+        var queue = new LinkedBlockingQueue();
+
+        threadPool.submit(new AddPriorityToQueueTask(3, queue));
+        threadPool.submit(new AddPriorityToQueueTask(1, queue));
+        threadPool.submit(new AddPriorityToQueueTask(2, queue));
+
+        assertEquals(queue.take(), 1);
+        assertEquals(queue.take(), 2);
+        assertEquals(queue.take(), 3);
     }
-
-    /**
-     * Test for setting the priority of a task.
-     * The task's priority should be set correctly.
-     */
-    @Test
-    public void setPriority_SetTaskPriority() {
-        // Create a sample task for testing
-        ITask task = new DemoTask("Priority Task", 3);
-
-        // Set the priority of the task
-        task.setPriority(4);
-
-        // Add your assertions here to verify the behavior of the task's setPriority() method
-        // For example:
-        // - Check if the priority is set correctly
-
-        // Example assertion: Check if the priority is set correctly
-        int expectedPriority = 4;
-        assertEquals(expectedPriority, task.getPriority());
-    }
-
-    /**
-     * Test for getting the priority of a task.
-     * The task's priority should be returned correctly.
-     */
-    @Test
-    public void getPriority_GetTaskPriority() {
-        // Create a sample task for testing
-        ITask task = new DemoTask("Priority Task", 3);
-
-        // Get the priority of the task
-        int priority = task.getPriority();
-
-        // Add your assertions here to verify the behavior of the task's getPriority() method
-        // For example:
-        // - Check if the expected priority is returned
-
-        // Example assertion: Check if the correct priority is returned
-        int expectedPriority = 3;
-        assertEquals(expectedPriority, priority);
-    }
-
 }
