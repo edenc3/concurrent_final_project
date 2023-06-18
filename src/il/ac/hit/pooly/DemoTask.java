@@ -1,30 +1,31 @@
 package il.ac.hit.pooly;
 
-// The DemoTask class represents a demo task that implements the ITask interface.
-public class DemoTask implements ITask {
-    private String priorityTask;
+import il.ac.hit.pooly.ITask;
+
+public class DemoTask implements ITask, Comparable<DemoTask> {
+    private String name;
     private int priority;
 
-    // Constructs a DemoTask object with the specified priority.
-    //
-    // @param priority the priority of the task
-    public DemoTask(String priorityTask, int priority) {
-        this.priorityTask = priorityTask;
-        setPriority(priority);
+    public DemoTask(String name, int priority) {
+        this.name = name;
+        this.priority = priority;
     }
 
-    @Override
-    public void perform() {
-        System.out.println("I'm a task: " + priorityTask);
+    public int getPriority() {
+        return priority;
     }
 
-    @Override
     public void setPriority(int level) {
         this.priority = level;
     }
 
     @Override
-    public int getPriority() {
-        return this.priority;
+    public int compareTo(DemoTask other) {
+        return Integer.compare(this.priority, other.getPriority());
+    }
+
+    @Override
+    public void perform() {
+        // Implementation of the task's perform method
     }
 }

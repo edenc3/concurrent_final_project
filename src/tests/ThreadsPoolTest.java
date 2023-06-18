@@ -9,6 +9,8 @@ import il.ac.hit.pooly.ITask;
 import il.ac.hit.pooly.ThreadsPool;
 import il.ac.hit.pooly.DemoTask;
 
+import java.util.concurrent.PriorityBlockingQueue;
+
 /**
  * Unit tests for the ThreadsPool class.
  */
@@ -37,20 +39,19 @@ public class ThreadsPoolTest {
      */
     @Test
     public void submit_AddTaskToPool() {
-        // Create a sample task for testing
-        ITask task = new DemoTask("Sample Task", 1);
+        // Create a new task
+        ITask task = new DemoTask("Priority Task", 1);
 
         // Submit the task to the ThreadsPool
         threadsPool.submit(task);
 
-        // Add your assertions here to verify the behavior of the ThreadsPool
-        // For example:
-        // - Check if the task is processed correctly
-        // - Check if the task is added to the priority queue
+        // Get the underlying PriorityBlockingQueue from the ThreadsPool
+        PriorityBlockingQueue<ITask> priorityBlockingQueue = threadsPool.getPriorityBlockingQueue();
 
-        // Example assertion: Check if the priority queue contains the submitted task
-        assertTrue("The task should be added to the pool", threadsPool.getPriorityBlockingQueue().contains(task));
+        // Check if the task exists in the PriorityBlockingQueue
+        assertTrue("The task should be added to the pool", priorityBlockingQueue.contains(task));
     }
+
 
     /**
      * Test for performing a task directly.
@@ -124,4 +125,5 @@ public class ThreadsPoolTest {
         int expectedPriority = 3;
         assertEquals(expectedPriority, priority);
     }
+
 }

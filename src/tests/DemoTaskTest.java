@@ -1,5 +1,8 @@
-package il.ac.hit.pooly;
+package tests;
 
+import il.ac.hit.pooly.DemoTask;
+import il.ac.hit.pooly.ITask;
+import il.ac.hit.pooly.ThreadsPool;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
