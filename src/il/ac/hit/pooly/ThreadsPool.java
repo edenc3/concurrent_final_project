@@ -21,9 +21,9 @@ public class ThreadsPool {
 
                 try {
                     while (true) {
-                        ITask t = tasks.take();
+                        ITask task = tasks.take();
                         System.out.println("Polled by:" + Thread.currentThread().getName());
-                        t.perform();
+                        task.perform();
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
